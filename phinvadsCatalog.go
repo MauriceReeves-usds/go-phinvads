@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"phinvads-catalog/phinvads"
 	"regexp"
 	"strings"
 	"time"
@@ -23,73 +24,6 @@ var durationInSeconds = 3
 // a regex to strip out the newlines
 var re = regexp.MustCompile(`\r?\n`)
 
-// all of these objects map back to the FHIR valueset schema found at:
-// https://build.fhir.org/valueset.html
-
-// PhinvadsLink is a link for walking the structure of PHINVADS data
-type PhinvadsLink struct {
-	Relation string
-	Url      string
-}
-
-// Identifier comes from the FHIR datatypes. Schema is here:
-// https://build.fhir.org/datatypes.html#Identifier
-type Identifier struct {
-	Use      string
-	Type     string
-	System   string
-	value    string
-	period   string
-	assigner string
-}
-
-// Concept is the actual data elements that make up a valueset, for example "U": "Unknown", etc
-type Concept struct {
-	Code    string
-	Display string
-}
-
-// ValueSet is the collection of concepts that make up a valueset
-type ValueSet struct {
-	Version string
-	System  string
-	Concept []Concept
-}
-
-type Composition struct {
-	LockedDate string
-	Inactive   bool
-	Include    []ValueSet
-}
-
-type PhinvadsResource struct {
-	ResourceType string
-	Id           string
-	Version      string
-	Name         string
-	Title        string
-	Status       string
-	Date         string
-	Description  string
-	Publisher    string
-	Identifier   []Identifier
-	Compose      Composition
-}
-
-type PhinvadsEntry struct {
-	FullUrl  string
-	Resource PhinvadsResource
-}
-
-type PhinvadsResponse struct {
-	ResourceType string
-	Id           string
-	Type         string
-	Total        int64
-	Link         []PhinvadsLink
-	Entry        []PhinvadsEntry
-}
-
 // check - checks for an error on a result, like reading a file, etc
 func check(e error) {
 	if e != nil {
@@ -97,8 +31,8 @@ func check(e error) {
 	}
 }
 
-func fetchThatShit(url string) PhinvadsResponse {
-	var response PhinvadsResponse
+func fetchThatShit(url string) phinvads.Response {
+	var response phinvads.Response
 	resp, err := http.Get(url)
 	check(err)
 	decoder := json.NewDecoder(resp.Body)
@@ -110,7 +44,7 @@ func fetchThatShit(url string) PhinvadsResponse {
 }
 
 // getResponseLinks - Given a response, grabs the links available
-func getResponseLinks(response *PhinvadsResponse) (string, string) {
+func getResponseLinks(response *phinvads.Response) (string, string) {
 	nextUrl := ""
 	selfUrl := ""
 	fmt.Println(response.Id)
@@ -126,7 +60,7 @@ func getResponseLinks(response *PhinvadsResponse) (string, string) {
 }
 
 // getNextResponse - gets the response object from the URL nextUrl
-func getNextResponse(nextUrl string) (*PhinvadsResponse, error) {
+func getNextResponse(nextUrl string) (*phinvads.Response, error) {
 	// sanity check the url
 	if len(strings.TrimSpace(nextUrl)) == 0 {
 		return nil, errors.New("cannot fetch an empty URL")
@@ -155,7 +89,7 @@ func getNextResponse(nextUrl string) (*PhinvadsResponse, error) {
 }
 
 // writeEntriesToCsv takes the response object and the CSV writer object and writes the data out
-func writeEntriesToCsv(response *PhinvadsResponse, writer *csv.Writer) string {
+func writeEntriesToCsv(response *phinvads.Response, writer *csv.Writer) string {
 	lastId := ""
 	for _, entry := range response.Entry {
 		selfUrl := fmt.Sprintf("%s%s", url, entry.Resource.Id)
@@ -175,8 +109,8 @@ func writeEntriesToCsv(response *PhinvadsResponse, writer *csv.Writer) string {
 	return lastId
 }
 
-func getAllResponses() []PhinvadsResponse {
-	var responses = make([]PhinvadsResponse, 0, 0)
+func getAllResponses() []phinvads.Response {
+	var responses = make([]phinvads.Response, 0, 0)
 	// fetch our first result
 	response, err := getNextResponse(url)
 	// append responses
