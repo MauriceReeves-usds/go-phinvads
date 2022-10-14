@@ -235,14 +235,17 @@ func getAllResponses() []PhinvadsResponse {
 }
 
 func main() {
-	//var response *PhinvadsResponse
-	//fetchPages := "?_getpages="
 	fmt.Println("Starting")
 	date := time.Now()
 	fmt.Println("Getting all responses")
+	// get all our responses
 	responses := getAllResponses()
 	// write out the results to a CSV
-	file, err := os.Create(fmt.Sprintf("results-%s.csv", date.Format("2006-01-02")))
+	if _, err := os.Stat("results"); os.IsNotExist(err) {
+		err := os.Mkdir("results", 0700)
+		check(err)
+	}
+	file, err := os.Create(fmt.Sprintf("results/results-%s.csv", date.Format("2006-01-02")))
 	check(err)
 	// defer calls this at the end of the main function
 	defer file.Close()
