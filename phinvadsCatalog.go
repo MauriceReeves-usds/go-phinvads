@@ -31,10 +31,15 @@ func check(e error) {
 	}
 }
 
-func fetchThatShit(url string) phinvads.Response {
+// fetchUri pulls the data at url for PHINVADS and turns it into
+// the requisite FHIR struct that we are interested in
+func fetchUri(url string) phinvads.Response {
+	// this it the object that will be reconstituted
 	var response phinvads.Response
+	// get the value and check the error
 	resp, err := http.Get(url)
 	check(err)
+	// decode the contents of the body
 	decoder := json.NewDecoder(resp.Body)
 	if decoder.More() {
 		err := decoder.Decode(&response)
@@ -44,6 +49,8 @@ func fetchThatShit(url string) phinvads.Response {
 }
 
 // getResponseLinks - Given a response, grabs the links available
+// the body of the response from PHINVADS actually is supposed to support paging
+// so there is a link for the current page and a link for the next set of values
 func getResponseLinks(response *phinvads.Response) (string, string) {
 	nextUrl := ""
 	selfUrl := ""
@@ -70,7 +77,7 @@ func getNextResponse(nextUrl string) (*phinvads.Response, error) {
 	for {
 		fmt.Printf("Processed %d of %d records so far...\n", countEntries, totalEntries)
 		fmt.Printf("Fetching %s\n\n", nextUrl)
-		response := fetchThatShit(nextUrl)
+		response := fetchUri(nextUrl)
 		// we may have exceeded some throttling threshold. let's try to back off a bit
 		if len(response.Entry) == 0 {
 			// increment our retry count

@@ -33,12 +33,19 @@ type ValueSet struct {
 	Concept []Concept
 }
 
+// Composition is the makeup of the actual valueset
 type Composition struct {
 	LockedDate string
 	Inactive   bool
 	Include    []ValueSet
 }
 
+// Metadata is a collection of metadata provided by the Bundle object
+type Metadata struct {
+	LastUpdated string
+}
+
+// Resource is metadata about our actual valueset, which is in the bundle
 type Resource struct {
 	ResourceType string
 	Id           string
@@ -46,6 +53,7 @@ type Resource struct {
 	Name         string
 	Title        string
 	Status       string
+	Experimental bool
 	Date         string
 	Description  string
 	Publisher    string
@@ -53,16 +61,24 @@ type Resource struct {
 	Compose      Composition
 }
 
+// Entry is the wrapper around the actual FHIR valueset, in that it has
+// the two properties: fullUrl, and resource. FullUrl is where to access this
+// from and Resource is the valueset itself
 type Entry struct {
 	FullUrl  string
 	Resource Resource
 }
 
+// Response is the "Bundle" resource type that includes information about
+// the paging as well as total entries available and the ID for the page.
+// this is not part of the FHIR valueset schema, but is an extension on the
+// FHIR Bundle type: https://build.fhir.org/bundle.html#bundle
 type Response struct {
 	ResourceType string
 	Id           string
 	Type         string
 	Total        int64
+	Meta         Metadata
 	Link         []Link
 	Entry        []Entry
 }
