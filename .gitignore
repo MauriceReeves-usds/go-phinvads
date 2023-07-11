@@ -15,6 +15,7 @@
 # vendor/
 
 results/**.*
+results/valuesets/**.*
 
 .idea/**.*
 *.iml

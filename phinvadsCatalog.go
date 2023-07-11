@@ -31,6 +31,31 @@ func check(e error) {
 	}
 }
 
+// writeJsonToFile - writes the JSON we receive to a file
+func writeJsonToFile(response *phinvads.Response) {
+	// create the output folder
+	jsonFolder := "results/valuesets"
+	if _, err := os.Stat(jsonFolder); os.IsNotExist(err) {
+		err := os.Mkdir(jsonFolder, 0700)
+		check(err)
+	}
+	// loop through each entry in the response
+	for _, entry := range response.Entry {
+		// write out the file given the json contents and the name
+		// this is done in an anonymous function so defer works correctly
+		func() {
+			// create the file to write out to
+			f, err := os.Create(jsonFolder + "/" + entry.Resource.Name + ".json")
+			check(err)
+			defer f.Close()
+			// marshall out the JSON
+			asJson, err := json.MarshalIndent(entry, "", "\t")
+			check(err)
+			f.Write(asJson)
+		}()
+	}
+}
+
 // fetchUri pulls the data at url for PHINVADS and turns it into
 // the requisite FHIR struct that we are interested in
 func fetchUri(url string) phinvads.Response {
@@ -38,6 +63,7 @@ func fetchUri(url string) phinvads.Response {
 	var response phinvads.Response
 	// get the value and check the error
 	resp, err := http.Get(url)
+	// check for an error
 	check(err)
 	// decode the contents of the body
 	decoder := json.NewDecoder(resp.Body)
@@ -45,6 +71,10 @@ func fetchUri(url string) phinvads.Response {
 		err := decoder.Decode(&response)
 		check(err)
 	}
+
+	// write the data out
+	writeJsonToFile(&response)
+
 	return response
 }
 

@@ -21,6 +21,7 @@ type Identifier struct {
 }
 
 // Concept is the actual data elements that make up a valueset, for example "U": "Unknown", etc
+// The schema for the concept comes from Coding: https://build.fhir.org/datatypes.html#codesystem
 type Concept struct {
 	Code    string
 	Display string
@@ -45,6 +46,15 @@ type Metadata struct {
 	LastUpdated string
 }
 
+type ContactData struct {
+	System string
+	Value  string
+}
+
+type ContactInfo struct {
+	Telecom []ContactData
+}
+
 // Resource is metadata about our actual valueset, which is in the bundle
 type Resource struct {
 	ResourceType string
@@ -57,6 +67,7 @@ type Resource struct {
 	Date         string
 	Description  string
 	Publisher    string
+	Contact      []ContactInfo
 	Identifier   []Identifier
 	Compose      Composition
 }
