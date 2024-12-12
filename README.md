@@ -5,16 +5,30 @@ PHINVADS is a massive dataset of terminology codes and associated metadata that 
 
 More information can be found in the comments in the code.
 
-Open a terminal in the root directory of your project (where phinvadsCatalog.go is located).
+Running the Command
+-------------------
 
-Run the following command to execute the main function:
+1. Open a terminal in the root directory of your project (where phinvadsCatalog.go is located).
 
-This command compiles and runs the Go program, starting from the main function defined in phinvadsCatalog.go.
+2. Run the following command to execute the main function:
+
+    go run phinvadsCatalog.go
+
+This command compiles and runs the Go program, starting from the main function defined in `phinvadsCatalog.go`.
 
 If you want to build the project into an executable binary and then run it, you can use the following commands:
 
-Build the project:
-Run the generated executable:
+1. Build the project:
+
+
+    go build -o phinvadsCatalog
+
+
+2. Run the generated executable:
+
+
+    go build -o phinvadsCatalog
+
 
 
 An example of a valueset in PHINVADS looks like this
