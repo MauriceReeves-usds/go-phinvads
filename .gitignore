@@ -27,3 +27,7 @@ results/valuesets/**.*
 /out/
 
 .DS_Store
+
+# other vendor and tooling dirs
+.clj-kondo
+.lsp

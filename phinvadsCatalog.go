@@ -13,15 +13,21 @@ import (
 	"time"
 )
 
+// MaxRetries - there are times when the request from PHINVADs will fail,
+// so we need to make sure we can retry, up to a limit. don't want to be spammy.
 const MaxRetries = 10
+
+// url - the base URL for PHINVADs to make requests against
 const url = "https://phinvads.cdc.gov/baseStu3/ValueSet/"
+
+// fetchPages - used in a few places to build URLs for requests
 const fetchPages = "?_getpages="
 
 var totalEntries = int64(0)
 var countEntries = int64(0)
 var durationInSeconds = 3
 
-// a regex to strip out the newlines
+// re - a regex to strip out the newlines
 var re = regexp.MustCompile(`\r?\n`)
 
 // check - checks for an error on a result, like reading a file, etc
@@ -216,6 +222,8 @@ func main() {
 		err := os.Mkdir("results", 0700)
 		check(err)
 	}
+	// please don't get me started on how Go does date formats and why THIS is the way you specify
+	// how a date is formatted. I think this is frankly weird compared to just using alpha values
 	file, err := os.Create(fmt.Sprintf("results/results-%s.csv", date.Format("2006-01-02")))
 	check(err)
 	// defer calls this at the end of the main function
