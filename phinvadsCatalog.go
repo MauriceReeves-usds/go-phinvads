@@ -120,7 +120,7 @@ func getNextResponse(nextUrl string) (*phinvads.Response, error) {
 			retryCount += 1
 			// oh you done messed up now
 			if retryCount > MaxRetries {
-				return nil, errors.New(fmt.Sprintf("Max retries exceeded. Cannot retrieve %s", nextUrl))
+				return nil, fmt.Errorf("Max retries exceeded. Cannot retrieve %s", nextUrl)
 			}
 			duration := durationInSeconds * retryCount
 			fmt.Printf("Sleeping for %d seconds\n", duration)
@@ -152,12 +152,23 @@ func writeEntriesToCsv(response *phinvads.Response, writer *csv.Writer) string {
 	return lastId
 }
 
+// walk through all of the responses and append the result to a slice for
+// further processing down the line
 func getAllResponses() []phinvads.Response {
-	var responses = make([]phinvads.Response, 0, 0)
+	var responses = make([]phinvads.Response, 0)
 	// fetch our first result
 	response, err := getNextResponse(url)
-	// append responses
-	responses = append(responses, *response)
+	// check to ensure err is not nil, handle if it is. maybe the URL was
+	// malformed or there were network issues, what have you. regardless, we
+	// need to handle it
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error fetching initial response: %v\n", err)
+		return responses
+	}
+	if response != nil {
+		// append responses
+		responses = append(responses, *response)
+	}
 	// set our marker for the total number of responses
 	totalEntries = response.Total
 	// loop beautifully, we love a big beautiful loop don't we folks
@@ -211,6 +222,16 @@ func getAllResponses() []phinvads.Response {
 	return responses
 }
 
+// our main method for processing the PHINVADS catalog. This walks the URLs and tries to pull
+// every valueset that the PHINVADS contains, with some error checking and handling, especially
+// around the next/last pointers which are broken in the PHINVADS API.
+//
+// This will output two sets of data. First is a spreadsheet that contains metadata about every
+// valueset in PHINVADS, and outputs a new version each time it's run so you have historical data.
+//
+// The second is a folder that contains the JSON for each valueset in PHINVADS. This is useful for
+// looking at each the values in each valueset, and can be used to build a more robust catalog of
+// all data in PHINVADS.
 func main() {
 	fmt.Println("Starting")
 	date := time.Now()
